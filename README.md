@@ -105,5 +105,5 @@ This project is **open-source** and licensed under the MIT License. 📄
 
 ---
 🔗 **Stay Connected**  
-📧 Email: cowsense@example.com  
+📧 Email: tayabghafor@gmail.com  
 🌐 Website: [CowSense.com](https://cowsense.com)  
