@@ -26,6 +26,33 @@ const AppNavigator = () => {
           component={SignUpScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="VetHome"
+          component={() => (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text>Vet Home Screen</Text>
+            </View>
+          )}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="FarmerHome"
+          component={() => (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text>Farmer Home Screen</Text>
+            </View>
+          )}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={() => (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text>Forgot Password Screen</Text>
+            </View>
+          )}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
