@@ -23,7 +23,7 @@ const SignUpScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../assets/logo.png')} // Replace with your logo
+        source={require('../assets/icon.png')} // Replace with your logo
         style={styles.logo}
       />
       <Text style={styles.title}>Create Account</Text>

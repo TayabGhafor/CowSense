@@ -11,12 +11,12 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <ImageBackground
-      source={require('../assets/splash-bg.jpg')} // Replace with your background image
+      source={require('../assets/splash-bg.jpeg')} // Replace with your background image
       style={styles.background}
     >
       <View style={styles.logoContainer}>
         <Image
-          source={require('../assets/logo.png')} // Replace with your logo
+          source={require('../assets/icon.png')} // Replace with your logo
           style={styles.logo}
         />
       </View>
