@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons';
 import CustomAlert from '../components/CustomAlert';
 import PasswordInfoPopup from '../components/PasswordInfoPopup';
+import EmailInfoPopup from '../components/EmailInfoPopup';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const LoginScreen = ({ navigation }) => {
@@ -18,6 +19,19 @@ const LoginScreen = ({ navigation }) => {
   const [role, setRole] = useState('veterinarian');
   const [showAlert, setShowAlert] = useState(false);
   const [showPasswordInfo, setShowPasswordInfo] = useState(false);
+  const [showEmailInfo, setShowEmailInfo] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showEyeIcon, setShowEyeIcon] = useState(false);
+
+  // Timer for password visibility
+  useEffect(() => {
+    if (showPassword) {
+      const timer = setTimeout(() => {
+        setShowPassword(false);
+      }, 10000); // 10 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showPassword]);
 
   // Email validation
   const isValidEmail = () => {
@@ -72,6 +86,12 @@ const LoginScreen = ({ navigation }) => {
         onClose={() => setShowPasswordInfo(false)}
       />
 
+      {/* Email Info Popup */}
+      <EmailInfoPopup
+        visible={showEmailInfo}
+        onClose={() => setShowEmailInfo(false)}
+      />
+
       <Image
         source={require('../assets/icon.png')} // Replace with your logo
         style={styles.logo}
@@ -115,7 +135,7 @@ const LoginScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Email Input */}
+      {/* Email Input with Info Icon */}
       <View style={styles.inputContainer}>
         <MaterialIcons
           name="email"
@@ -130,24 +150,48 @@ const LoginScreen = ({ navigation }) => {
           onChangeText={setEmail}
           keyboardType="email-address"
         />
+        <TouchableOpacity
+          style={styles.infoIcon}
+          onPress={() => setShowEmailInfo(true)}
+        >
+          <Text style={styles.infoIconText}>i</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Password Input with Info Icon */}
+      {/* Password Input with Info/Show Icon */}
       <View style={styles.inputContainer}>
         <MaterialIcons name="lock" size={moderateScale(20)} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
           placeholder="password"
           value={password}
-          onChangeText={setPassword}
-          secureTextEntry
+          onChangeText={(text) => {
+            setPassword(text);
+            setShowEyeIcon(text.length > 0); // Show eye icon when typing starts
+          }}
+          secureTextEntry={!showPassword}
+          selectTextOnFocus={false} // Prevent copying
+          contextMenuHidden={true} // Disable context menu (copy/paste)
         />
-        <TouchableOpacity
-          style={styles.infoIcon}
-          onPress={() => setShowPasswordInfo(true)}
-        >
-          <Text style={styles.infoIconText}>i</Text>
-        </TouchableOpacity>
+        {showEyeIcon ? (
+          <TouchableOpacity
+            style={styles.infoIcon}
+            onPress={() => setShowPassword(true)}
+          >
+            <MaterialIcons
+              name={showPassword ? 'visibility' : 'visibility-off'}
+              size={moderateScale(20)}
+              color="#666"
+            />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.infoIcon}
+            onPress={() => setShowPasswordInfo(true)}
+          >
+            <Text style={styles.infoIconText}>i</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Sign In Button */}

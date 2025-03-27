@@ -7,18 +7,20 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import CustomAlert from '../components/CustomAlert';
 import { MaterialIcons } from '@expo/vector-icons';
+import CustomAlert from '../components/CustomAlert';
+import EmailInfoPopup from '../components/EmailInfoPopup';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [showAlert, setShowAlert] = useState(false);
+  const [showEmailInfo, setShowEmailInfo] = useState(false);
 
   // Email validation
   const isValidEmail = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Basic email format check
-    const validDomains = ['@gmail.com', '@yahoo.com']; // Add more domains as needed
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validDomains = ['@gmail.com', '@yahoo.com'];
     return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
   };
 
@@ -47,6 +49,12 @@ const ForgotPasswordScreen = ({ navigation }) => {
         onConfirm={() => setShowAlert(false)}
       />
 
+      {/* Email Info Popup */}
+      <EmailInfoPopup
+        visible={showEmailInfo}
+        onClose={() => setShowEmailInfo(false)}
+      />
+
       <Image
         source={require('../assets/icon.png')} // Replace with your logo
         style={styles.logo}
@@ -56,7 +64,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         Enter your email, We will send you a verification code.
       </Text>
 
-      {/* Email Input */}
+      {/* Email Input with Info Icon */}
       <View style={styles.inputContainer}>
         <MaterialIcons
           name="email"
@@ -71,6 +79,12 @@ const ForgotPasswordScreen = ({ navigation }) => {
           onChangeText={setEmail}
           keyboardType="email-address"
         />
+        <TouchableOpacity
+          style={styles.infoIcon}
+          onPress={() => setShowEmailInfo(true)}
+        >
+          <Text style={styles.infoIconText}>i</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Send Code Button */}
@@ -130,6 +144,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: moderateScale(10),
     fontSize: scale(14),
+  },
+  infoIcon: {
+    marginLeft: moderateScale(10),
+    padding: moderateScale(5),
+  },
+  infoIconText: {
+    fontSize: scale(14),
+    color: '#666',
+    fontStyle: 'italic',
   },
   sendCodeButton: {
     backgroundColor: '#d32f2f',
