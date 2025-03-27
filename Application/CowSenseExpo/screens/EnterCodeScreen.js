@@ -6,26 +6,29 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  Alert,
 } from 'react-native';
+import CustomAlert from '../components/CustomAlert';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const EnterCodeScreen = ({ navigation, route }) => {
   const { email } = route.params; // Get the email from the previous screen
   const [code, setCode] = useState(['', '', '', '']); // Array to store 4 digits
-  const [showResend, setShowResend] = useState(false); // Toggle Resend UI
+  const [showResend, setShowResend] = useState(false); // Toggle Resend button visibility
+  const [showTimer, setShowTimer] = useState(false); // Toggle Timer visibility
   const [timer, setTimer] = useState(60); // 1-minute timer
-  const [isResendDisabled, setIsResendDisabled] = useState(true); // Disable Resend button during timer
+  const [isResendDisabled, setIsResendDisabled] = useState(false); // Disable Resend button during timer
+  const [showAlert, setShowAlert] = useState(false); // Control custom alert visibility
 
-  // Start the timer when showResend is true
+  // Start the timer when showTimer is true
   useEffect(() => {
-    if (!showResend) return;
+    if (!showTimer) return;
 
     const interval = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          setIsResendDisabled(false);
+          setShowTimer(false); // Hide the timer when it reaches 0
+          setIsResendDisabled(false); // Re-enable the Resend button
           return 0;
         }
         return prev - 1;
@@ -33,7 +36,7 @@ const EnterCodeScreen = ({ navigation, route }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [showResend]);
+  }, [showTimer]);
 
   const handleCodeChange = (text, index) => {
     const newCode = [...code];
@@ -53,32 +56,53 @@ const EnterCodeScreen = ({ navigation, route }) => {
     // Mock verification: assume the correct code is "1234"
     // Later, we'll integrate with Firebase to verify the code
     if (enteredCode === '1234') {
-      Alert.alert('Success', 'Code verified successfully!', [
-        { text: 'OK', onPress: () => navigation.navigate('Login') },
-      ]);
+      setShowAlert(true);
+      setShowResend(false); // Hide Resend UI on success
+      setShowTimer(false); // Hide Timer on success
     } else {
-      Alert.alert('Invalid Code', 'The code you entered is incorrect.');
-      setShowResend(true); // Show the Resend UI
-      setTimer(60); // Reset the timer
-      setIsResendDisabled(true); // Disable the Resend button
+      setShowAlert(true); // Show the custom alert for incorrect code
     }
   };
 
   const handleResendCode = () => {
     // Mock resending the code
     console.log('Resending code to:', email);
-    Alert.alert('Code Resent', 'A new code has been sent to your email.');
 
     // Reset the code inputs
     setCode(['', '', '', '']);
 
-    // Reset the timer and disable the button
+    // Reset the timer, show it, and disable the button
     setTimer(60);
+    setShowTimer(true);
     setIsResendDisabled(true);
   };
 
   return (
     <View style={styles.container}>
+      {/* Custom Alert for Success */}
+      <CustomAlert
+        visible={showAlert && code.join('') === '1234'}
+        title="Success"
+        message="Code verified successfully!"
+        onClose={() => setShowAlert(false)}
+        onConfirm={() => {
+          setShowAlert(false);
+          navigation.navigate('Login');
+        }}
+      />
+
+      {/* Custom Alert for Incorrect Code */}
+      <CustomAlert
+        visible={showAlert && code.join('') !== '1234'}
+        title="Invalid Code"
+        message="The code you entered is incorrect."
+        onClose={() => setShowAlert(false)}
+        onConfirm={() => {
+          setShowAlert(false);
+          setShowResend(true); // Show the Resend button after the alert
+        }}
+      />
+
       <Image
         source={require('../assets/icon.png')} // Replace with your logo
         style={styles.logo}
@@ -114,9 +138,11 @@ const EnterCodeScreen = ({ navigation, route }) => {
           >
             <Text style={styles.resendText}>Resend Code</Text>
           </TouchableOpacity>
-          <Text style={styles.timerText}>
-            {`0:${timer < 10 ? `0${timer}` : timer}`}
-          </Text>
+          {showTimer && (
+            <Text style={styles.timerText}>
+              {`0:${timer < 10 ? `0${timer}` : timer}`}
+            </Text>
+          )}
         </View>
       )}
 

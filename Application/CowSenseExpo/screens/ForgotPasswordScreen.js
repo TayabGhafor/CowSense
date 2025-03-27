@@ -6,23 +6,29 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  Alert,
 } from 'react-native';
+import CustomAlert from '../components/CustomAlert';
 import { MaterialIcons } from '@expo/vector-icons';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
+
+  // Email validation
+  const isValidEmail = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Basic email format check
+    const validDomains = ['@gmail.com', '@yahoo.com']; // Add more domains as needed
+    return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
+  };
 
   const handleSendCode = () => {
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+    if (!isValidEmail()) {
+      setShowAlert(true);
       return;
     }
 
-    // For now, mock the API call to check if the user exists
+    // Mock the API call to check if the user exists
     // Later, we'll integrate with Firebase to verify the email
     console.log('Sending code to:', email);
 
@@ -32,6 +38,15 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Custom Alert for Invalid Email */}
+      <CustomAlert
+        visible={showAlert}
+        title="Invalid Email"
+        message="Please enter a valid email address ending with @gmail.com or @yahoo.com."
+        onClose={() => setShowAlert(false)}
+        onConfirm={() => setShowAlert(false)}
+      />
+
       <Image
         source={require('../assets/icon.png')} // Replace with your logo
         style={styles.logo}
@@ -59,7 +74,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
       </View>
 
       {/* Send Code Button */}
-      <TouchableOpacity style={styles.sendCodeButton} onPress={handleSendCode}>
+      <TouchableOpacity
+        style={[
+          styles.sendCodeButton,
+          { opacity: isValidEmail() ? 1 : 0.5 },
+        ]}
+        onPress={handleSendCode}
+        disabled={!isValidEmail()}
+      >
         <Text style={styles.sendCodeText}>Send Code</Text>
       </TouchableOpacity>
     </View>
