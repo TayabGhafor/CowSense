@@ -7,7 +7,7 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome } from '@expo/vector-icons'; // Import FontAwesome for Facebook icon
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -109,10 +109,12 @@ const LoginScreen = ({ navigation }) => {
 
       {/* Social Login Buttons */}
       <TouchableOpacity style={styles.socialButton}>
-        <Text style={styles.socialText}>f Sign In with Facebook</Text>
+        <FontAwesome name="facebook" size={20} color="#fff" style={styles.socialIcon} />
+        <Text style={styles.socialText}>Sign In with Facebook</Text>
       </TouchableOpacity>
       <TouchableOpacity style={[styles.socialButton, styles.googleButton]}>
-        <Text style={styles.googleText}>G Sign In with Google</Text>
+        <MaterialIcons name="google" size={20} color="#000" style={styles.socialIcon} />
+        <Text style={styles.googleText}>Sign In with Google</Text>
       </TouchableOpacity>
 
       {/* Links */}
@@ -215,12 +217,17 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   socialButton: {
+    flexDirection: 'row', // Align icon and text horizontally
     backgroundColor: '#3b5998',
     padding: 15,
     borderRadius: 20,
     width: '100%',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 10,
+  },
+  socialIcon: {
+    marginRight: 10, // Space between icon and text
   },
   socialText: {
     color: '#fff',
@@ -242,10 +249,12 @@ const styles = StyleSheet.create({
   },
   signUpContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
   },
   signUpText: {
     color: '#666',
+    fontSize: 14,
   },
 });
 
