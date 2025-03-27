@@ -6,6 +6,7 @@ import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import EnterCodeScreen from '../screens/EnterCodeScreen';
+import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
 
 const Stack = createStackNavigator();
 
@@ -54,6 +55,11 @@ const AppNavigator = () => {
         <Stack.Screen
           name="EnterCode"
           component={EnterCodeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PasswordRecovery"
+          component={PasswordRecoveryScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
