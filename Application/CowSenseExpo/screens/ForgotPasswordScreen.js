@@ -13,7 +13,9 @@ import EmailInfoPopup from '../components/EmailInfoPopup';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const ForgotPasswordScreen = ({ navigation }) => {
+  const [method, setMethod] = useState('email'); // Email or SMS
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [showEmailInfo, setShowEmailInfo] = useState(false);
 
@@ -24,27 +26,41 @@ const ForgotPasswordScreen = ({ navigation }) => {
     return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
   };
 
+  // Phone validation (basic: 10 digits)
+  const isValidPhone = () => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
+  };
+
   const handleSendCode = () => {
-    if (!isValidEmail()) {
+    if (method === 'email' && !isValidEmail()) {
       setShowAlert(true);
       return;
     }
 
-    // Mock the API call to check if the user exists
-    // Later, we'll integrate with Firebase to verify the email
-    console.log('Sending code to:', email);
+    if (method === 'SMS' && !isValidPhone()) {
+      setShowAlert(true);
+      return;
+    }
 
-    // Navigate to EnterCodeScreen with the email
-    navigation.navigate('EnterCode', { email });
+    // Mock the API call to send the code
+    console.log(`Sending code via ${method} to:`, method === 'email' ? email : phone);
+
+    // Navigate to EnterCodeScreen with the email/phone and method
+    navigation.navigate('EnterCode', { email: method === 'email' ? email : phone, method });
   };
 
   return (
     <View style={styles.container}>
-      {/* Custom Alert for Invalid Email */}
+      {/* Custom Alert for Invalid Input */}
       <CustomAlert
         visible={showAlert}
-        title="Invalid Email"
-        message="Please enter a valid email address ending with @gmail.com or @yahoo.com."
+        title="Invalid Input"
+        message={
+          method === 'email'
+            ? 'Please enter a valid email address ending with @gmail.com or @yahoo.com.'
+            : 'Please enter a valid 10-digit phone number.'
+        }
         onClose={() => setShowAlert(false)}
         onConfirm={() => setShowAlert(false)}
       />
@@ -56,45 +72,111 @@ const ForgotPasswordScreen = ({ navigation }) => {
       />
 
       <Image
-        source={require('../assets/icon.png')} // Replace with your logo
+        source={require('../assets/logo.png')}
         style={styles.logo}
       />
       <Text style={styles.title}>Forgot Password?</Text>
       <Text style={styles.subtitle}>
-        Enter your email, We will send you a verification code.
+        Select how you would like to receive your verification code.
       </Text>
 
-      {/* Email Input with Info Icon */}
-      <View style={styles.inputContainer}>
-        <MaterialIcons
-          name="email"
-          size={moderateScale(20)}
-          color="#666"
-          style={styles.icon}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
+      {/* Method Selection (Email or SMS) */}
+      <View style={styles.methodContainer}>
         <TouchableOpacity
-          style={styles.infoIcon}
-          onPress={() => setShowEmailInfo(true)}
+          style={[
+            styles.methodButton,
+            method === 'email' && styles.activeMethodButton,
+            { borderTopLeftRadius: moderateScale(20), borderBottomLeftRadius: moderateScale(20) },
+          ]}
+          onPress={() => setMethod('email')}
         >
-          <Text style={styles.infoIconText}>i</Text>
+          <Text
+            style={
+              method === 'email'
+                ? styles.activeMethodText
+                : styles.methodText
+            }
+          >
+            Email
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.methodButton,
+            method === 'SMS' && styles.activeMethodButton,
+            { borderTopRightRadius: moderateScale(20), borderBottomRightRadius: moderateScale(20) },
+          ]}
+          onPress={() => setMethod('SMS')}
+        >
+          <Text
+            style={
+              method === 'SMS' ? styles.activeMethodText : styles.methodText
+            }
+          >
+            SMS
+          </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Conditional Input Field (Email or Phone) */}
+      {method === 'email' ? (
+        <View style={styles.inputContainer}>
+          <MaterialIcons
+            name="email"
+            size={moderateScale(20)}
+            color="#666"
+            style={styles.icon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+          />
+          <TouchableOpacity
+            style={styles.infoIcon}
+            onPress={() => setShowEmailInfo(true)}
+          >
+            <Text style={styles.infoIconText}>i</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.inputContainer}>
+          <MaterialIcons
+            name="phone"
+            size={moderateScale(20)}
+            color="#666"
+            style={styles.icon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="phone number"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
+        </View>
+      )}
 
       {/* Send Code Button */}
       <TouchableOpacity
         style={[
           styles.sendCodeButton,
-          { opacity: isValidEmail() ? 1 : 0.5 },
+          {
+            opacity:
+              method === 'email'
+                ? isValidEmail()
+                  ? 1
+                  : 0.5
+                : isValidPhone()
+                ? 1
+                : 0.5,
+          },
         ]}
         onPress={handleSendCode}
-        disabled={!isValidEmail()}
+        disabled={method === 'email' ? !isValidEmail() : !isValidPhone()}
       >
         <Text style={styles.sendCodeText}>Send Code</Text>
       </TouchableOpacity>
@@ -127,6 +209,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: verticalScale(10),
     marginBottom: verticalScale(20),
+  },
+  methodContainer: {
+    flexDirection: 'row',
+    marginBottom: verticalScale(20),
+    width: '80%',
+  },
+  methodButton: {
+    flex: 1,
+    padding: moderateScale(10),
+    backgroundColor: '#e0e0e0',
+    alignItems: 'center',
+  },
+  activeMethodButton: {
+    backgroundColor: '#d32f2f',
+  },
+  methodText: {
+    color: '#000',
+    fontSize: scale(14),
+  },
+  activeMethodText: {
+    color: '#fff',
+    fontSize: scale(14),
   },
   inputContainer: {
     flexDirection: 'row',
