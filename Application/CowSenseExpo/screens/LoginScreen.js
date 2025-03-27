@@ -7,15 +7,42 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons'; // Added AntDesign for Google icon
+import { MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons';
+import CustomAlert from '../components/CustomAlert';
+import PasswordInfoPopup from '../components/PasswordInfoPopup';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('veterinarian');
+  const [showAlert, setShowAlert] = useState(false);
+  const [showPasswordInfo, setShowPasswordInfo] = useState(false);
+
+  // Email validation
+  const isValidEmail = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validDomains = ['@gmail.com', '@yahoo.com'];
+    return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
+  };
+
+  // Password validation
+  const isValidPassword = () => {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/;
+    return passwordRegex.test(password);
+  };
 
   const handleLogin = () => {
+    if (!isValidEmail()) {
+      setShowAlert(true);
+      return;
+    }
+
+    if (!isValidPassword()) {
+      setShowAlert(true);
+      return;
+    }
+
     console.log('Login:', { email, password, role });
     if (role === 'veterinarian') {
       navigation.navigate('VetHome');
@@ -26,6 +53,25 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Custom Alert for Invalid Input */}
+      <CustomAlert
+        visible={showAlert}
+        title="Invalid Input"
+        message={
+          !isValidEmail()
+            ? 'Please enter a valid email address ending with @gmail.com or @yahoo.com.'
+            : 'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be 8-15 characters long.'
+        }
+        onClose={() => setShowAlert(false)}
+        onConfirm={() => setShowAlert(false)}
+      />
+
+      {/* Password Info Popup */}
+      <PasswordInfoPopup
+        visible={showPasswordInfo}
+        onClose={() => setShowPasswordInfo(false)}
+      />
+
       <Image
         source={require('../assets/icon.png')} // Replace with your logo
         style={styles.logo}
@@ -69,7 +115,7 @@ const LoginScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Inputs */}
+      {/* Email Input */}
       <View style={styles.inputContainer}>
         <MaterialIcons
           name="email"
@@ -85,6 +131,8 @@ const LoginScreen = ({ navigation }) => {
           keyboardType="email-address"
         />
       </View>
+
+      {/* Password Input with Info Icon */}
       <View style={styles.inputContainer}>
         <MaterialIcons name="lock" size={moderateScale(20)} color="#666" style={styles.icon} />
         <TextInput
@@ -94,10 +142,23 @@ const LoginScreen = ({ navigation }) => {
           onChangeText={setPassword}
           secureTextEntry
         />
+        <TouchableOpacity
+          style={styles.infoIcon}
+          onPress={() => setShowPasswordInfo(true)}
+        >
+          <Text style={styles.infoIconText}>i</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Sign In Button */}
-      <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
+      <TouchableOpacity
+        style={[
+          styles.signInButton,
+          { opacity: isValidEmail() && isValidPassword() ? 1 : 0.5 },
+        ]}
+        onPress={handleLogin}
+        disabled={!(isValidEmail() && isValidPassword())}
+      >
         <Text style={styles.signInText}>Sign In</Text>
       </TouchableOpacity>
 
@@ -195,6 +256,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: moderateScale(10),
     fontSize: scale(14),
+  },
+  infoIcon: {
+    marginLeft: moderateScale(10),
+    padding: moderateScale(5),
+  },
+  infoIconText: {
+    fontSize: scale(14),
+    color: '#666',
+    fontStyle: 'italic',
   },
   signInButton: {
     backgroundColor: '#d32f2f',

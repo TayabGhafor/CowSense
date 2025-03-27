@@ -7,7 +7,9 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons'; // Added AntDesign for Google icon
+import { MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons';
+import CustomAlert from '../components/CustomAlert';
+import PasswordInfoPopup from '../components/PasswordInfoPopup';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const SignUpScreen = ({ navigation }) => {
@@ -15,14 +17,70 @@ const SignUpScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('veterinarian');
+  const [showAlert, setShowAlert] = useState(false);
+  const [showPasswordInfo, setShowPasswordInfo] = useState(false);
+
+  // Name validation
+  const isValidName = () => {
+    return name.trim().length > 0;
+  };
+
+  // Email validation
+  const isValidEmail = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validDomains = ['@gmail.com', '@yahoo.com'];
+    return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
+  };
+
+  // Password validation
+  const isValidPassword = () => {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/;
+    return passwordRegex.test(password);
+  };
 
   const handleSignUp = () => {
+    if (!isValidName()) {
+      setShowAlert(true);
+      return;
+    }
+
+    if (!isValidEmail()) {
+      setShowAlert(true);
+      return;
+    }
+
+    if (!isValidPassword()) {
+      setShowAlert(true);
+      return;
+    }
+
     console.log('SignUp:', { name, email, password, role });
     navigation.navigate('Login');
   };
 
   return (
     <View style={styles.container}>
+      {/* Custom Alert for Invalid Input */}
+      <CustomAlert
+        visible={showAlert}
+        title="Invalid Input"
+        message={
+          !isValidName()
+            ? 'Please enter your name.'
+            : !isValidEmail()
+            ? 'Please enter a valid email address ending with @gmail.com or @yahoo.com.'
+            : 'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be 8-15 characters long.'
+        }
+        onClose={() => setShowAlert(false)}
+        onConfirm={() => setShowAlert(false)}
+      />
+
+      {/* Password Info Popup */}
+      <PasswordInfoPopup
+        visible={showPasswordInfo}
+        onClose={() => setShowPasswordInfo(false)}
+      />
+
       <Image
         source={require('../assets/icon.png')} // Replace with your logo
         style={styles.logo}
@@ -66,7 +124,7 @@ const SignUpScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Inputs */}
+      {/* Name Input */}
       <View style={styles.inputContainer}>
         <MaterialIcons
           name="person"
@@ -81,6 +139,8 @@ const SignUpScreen = ({ navigation }) => {
           onChangeText={setName}
         />
       </View>
+
+      {/* Email Input */}
       <View style={styles.inputContainer}>
         <MaterialIcons
           name="email"
@@ -96,6 +156,8 @@ const SignUpScreen = ({ navigation }) => {
           keyboardType="email-address"
         />
       </View>
+
+      {/* Password Input with Info Icon */}
       <View style={styles.inputContainer}>
         <MaterialIcons name="lock" size={moderateScale(20)} color="#666" style={styles.icon} />
         <TextInput
@@ -105,10 +167,23 @@ const SignUpScreen = ({ navigation }) => {
           onChangeText={setPassword}
           secureTextEntry
         />
+        <TouchableOpacity
+          style={styles.infoIcon}
+          onPress={() => setShowPasswordInfo(true)}
+        >
+          <Text style={styles.infoIconText}>i</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Create Account Button */}
-      <TouchableOpacity style={styles.signInButton} onPress={handleSignUp}>
+      <TouchableOpacity
+        style={[
+          styles.signInButton,
+          { opacity: isValidName() && isValidEmail() && isValidPassword() ? 1 : 0.5 },
+        ]}
+        onPress={handleSignUp}
+        disabled={!(isValidName() && isValidEmail() && isValidPassword())}
+      >
         <Text style={styles.signInText}>Create Account</Text>
       </TouchableOpacity>
 
@@ -203,6 +278,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: moderateScale(10),
     fontSize: scale(14),
+  },
+  infoIcon: {
+    marginLeft: moderateScale(10),
+    padding: moderateScale(5),
+  },
+  infoIconText: {
+    fontSize: scale(14),
+    color: '#666',
+    fontStyle: 'italic',
   },
   signInButton: {
     backgroundColor: '#d32f2f',
