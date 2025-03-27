@@ -7,7 +7,8 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { MaterialIcons, FontAwesome } from '@expo/vector-icons'; // Import FontAwesome for Facebook icon
+import { MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons'; // Added AntDesign for Google icon
+import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -17,9 +18,9 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = () => {
     console.log('Login:', { email, password, role });
     if (role === 'veterinarian') {
-      navigation.navigate('VetHome'); // Placeholder route
+      navigation.navigate('VetHome');
     } else {
-      navigation.navigate('FarmerHome'); // Placeholder route
+      navigation.navigate('FarmerHome');
     }
   };
 
@@ -38,7 +39,7 @@ const LoginScreen = ({ navigation }) => {
           style={[
             styles.roleButton,
             role === 'veterinarian' && styles.activeRoleButton,
-            { borderTopLeftRadius: 20, borderBottomLeftRadius: 20 },
+            { borderTopLeftRadius: moderateScale(20), borderBottomLeftRadius: moderateScale(20) },
           ]}
           onPress={() => setRole('veterinarian')}
         >
@@ -56,7 +57,7 @@ const LoginScreen = ({ navigation }) => {
           style={[
             styles.roleButton,
             role === 'farmer' && styles.activeRoleButton,
-            { borderTopRightRadius: 20, borderBottomRightRadius: 20 },
+            { borderTopRightRadius: moderateScale(20), borderBottomRightRadius: moderateScale(20) },
           ]}
           onPress={() => setRole('farmer')}
         >
@@ -72,7 +73,7 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.inputContainer}>
         <MaterialIcons
           name="email"
-          size={20}
+          size={moderateScale(20)}
           color="#666"
           style={styles.icon}
         />
@@ -85,7 +86,7 @@ const LoginScreen = ({ navigation }) => {
         />
       </View>
       <View style={styles.inputContainer}>
-        <MaterialIcons name="lock" size={20} color="#666" style={styles.icon} />
+        <MaterialIcons name="lock" size={moderateScale(20)} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
           placeholder="password"
@@ -109,11 +110,11 @@ const LoginScreen = ({ navigation }) => {
 
       {/* Social Login Buttons */}
       <TouchableOpacity style={styles.socialButton}>
-        <FontAwesome name="facebook" size={20} color="#fff" style={styles.socialIcon} />
+        <FontAwesome name="facebook" size={moderateScale(20)} color="#fff" style={styles.socialIcon} />
         <Text style={styles.socialText}>Sign In with Facebook</Text>
       </TouchableOpacity>
       <TouchableOpacity style={[styles.socialButton, styles.googleButton]}>
-        <MaterialIcons name="google" size={20} color="#000" style={styles.socialIcon} />
+        <AntDesign name="google" size={moderateScale(20)} color="#000" style={styles.socialIcon} />
         <Text style={styles.googleText}>Sign In with Google</Text>
       </TouchableOpacity>
 
@@ -137,32 +138,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 20,
+    paddingHorizontal: moderateScale(20),
   },
   logo: {
-    width: 120,
-    height: 60,
+    width: scale(120),
+    height: verticalScale(60),
     resizeMode: 'contain',
-    marginBottom: 20,
+    marginBottom: verticalScale(20),
   },
   title: {
-    fontSize: 20,
+    fontSize: scale(20),
     fontWeight: 'bold',
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: '#666',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: verticalScale(20),
   },
   roleContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: verticalScale(20),
+    width: '80%',
   },
   roleButton: {
     flex: 1,
-    padding: 10,
+    padding: moderateScale(10),
     backgroundColor: '#e0e0e0',
     alignItems: 'center',
   },
@@ -171,41 +173,46 @@ const styles = StyleSheet.create({
   },
   roleText: {
     color: '#000',
+    fontSize: scale(14),
   },
   activeRoleText: {
     color: '#fff',
+    fontSize: scale(14),
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#e0e0e0',
-    borderRadius: 20,
-    marginBottom: 15,
-    paddingHorizontal: 10,
+    borderRadius: moderateScale(20),
+    marginBottom: verticalScale(15),
+    paddingHorizontal: moderateScale(10),
+    width: '80%',
   },
   icon: {
-    marginRight: 10,
+    marginRight: moderateScale(10),
   },
   input: {
     flex: 1,
-    padding: 10,
+    padding: moderateScale(10),
+    fontSize: scale(14),
   },
   signInButton: {
     backgroundColor: '#d32f2f',
-    padding: 15,
-    borderRadius: 20,
-    width: '100%',
+    padding: moderateScale(15),
+    borderRadius: moderateScale(20),
+    width: '80%',
     alignItems: 'center',
   },
   signInText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: scale(16),
     fontWeight: 'bold',
   },
   separator: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: verticalScale(20),
+    width: '80%',
   },
   line: {
     flex: 1,
@@ -213,25 +220,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   orText: {
-    marginHorizontal: 10,
+    marginHorizontal: moderateScale(10),
     color: '#666',
+    fontSize: scale(14),
   },
   socialButton: {
-    flexDirection: 'row', // Align icon and text horizontally
+    flexDirection: 'row',
     backgroundColor: '#3b5998',
-    padding: 15,
-    borderRadius: 20,
-    width: '100%',
+    padding: moderateScale(15),
+    borderRadius: moderateScale(20),
+    width: '80%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: verticalScale(10),
   },
   socialIcon: {
-    marginRight: 10, // Space between icon and text
+    marginRight: moderateScale(10),
   },
   socialText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: scale(16),
   },
   googleButton: {
     backgroundColor: '#fff',
@@ -240,12 +248,13 @@ const styles = StyleSheet.create({
   },
   googleText: {
     color: '#000',
-    fontSize: 16,
+    fontSize: scale(16),
   },
   link: {
     color: '#1e88e5',
     textAlign: 'center',
-    marginVertical: 10,
+    marginVertical: verticalScale(10),
+    fontSize: scale(14),
   },
   signUpContainer: {
     flexDirection: 'row',
@@ -254,7 +263,7 @@ const styles = StyleSheet.create({
   },
   signUpText: {
     color: '#666',
-    fontSize: 14,
+    fontSize: scale(14),
   },
 });
 

@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
-import { View, Image, ImageBackground, StyleSheet } from 'react-native';
+import { View, Image, ImageBackground, StyleSheet, Dimensions } from 'react-native';
+import { scale, verticalScale, moderateScale } from '../utils/scale';
+
+const { width, height } = Dimensions.get('window');
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
@@ -27,17 +30,19 @@ const SplashScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+    width: width,
+    height: height,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logoContainer: {
     backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
+    padding: moderateScale(20),
+    borderRadius: moderateScale(10),
   },
   logo: {
-    width: 120,
-    height: 60,
+    width: scale(120),
+    height: verticalScale(60),
     resizeMode: 'contain',
   },
 });
