@@ -4,6 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from '../screens/SplashScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import EnterCodeScreen from '../screens/EnterCodeScreen';
 
 const Stack = createStackNavigator();
 
@@ -46,11 +48,12 @@ const AppNavigator = () => {
         />
         <Stack.Screen
           name="ForgotPassword"
-          component={() => (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <Text>Forgot Password Screen</Text>
-            </View>
-          )}
+          component={ForgotPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EnterCode"
+          component={EnterCodeScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
