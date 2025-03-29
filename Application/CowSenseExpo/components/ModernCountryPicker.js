@@ -1,5 +1,12 @@
 import React from 'react';
 import CountryPicker from 'react-native-country-picker-modal';
+import { LogBox } from 'react-native';
+
+// Suppress the specific defaultProps warnings
+LogBox.ignoreLogs([
+  'CountryItem: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+  'CountryModal: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.'
+]);
 
 const ModernCountryPicker = ({ 
   withFilter = true,

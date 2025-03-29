@@ -14,6 +14,11 @@ import PasswordInfoPopup from '../components/PasswordInfoPopup';
 import EmailInfoPopup from '../components/EmailInfoPopup';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
+// Mock storage for users
+if (!global.users) {
+  global.users = [];
+}
+
 const SignUpScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -65,9 +70,12 @@ const SignUpScreen = ({ navigation }) => {
       return;
     }
 
+    // Save user credentials
+    global.users.push({ name, email, password, role });
     console.log('SignUp:', { name, email, password, role });
-    global.isFirstLogin = true; // Set first-time login flag
-    navigation.navigate('ProfileSetup', { name, email, role });
+
+    // Redirect to LoginScreen
+    navigation.replace('Login');
   };
 
   return (
@@ -201,7 +209,6 @@ const SignUpScreen = ({ navigation }) => {
   );
 };
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -1,4 +1,4 @@
-// screens/ForgotPasswordScreen.js
+// screens/PasswordRecoveryScreen.js
 import React, { useState } from 'react';
 import {
   View,
@@ -11,70 +11,50 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import CustomAlert from '../components/CustomAlert';
 import CustomToast from '../components/CustomToast';
-import EmailInfoPopup from '../components/EmailInfoPopup';
-import CountryPicker from 'react-native-country-picker-modal';
+import PasswordInfoPopup from '../components/PasswordInfoPopup';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
-const ForgotPasswordScreen = ({ navigation }) => {
-  const [method, setMethod] = useState('email');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState('PK');
-  const [countryCallingCode, setCountryCallingCode] = useState('+92');
+const PasswordRecoveryScreen = ({ navigation, route }) => {
+  const { email } = route.params;
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showAlert, setShowAlert] = useState(false);
-  const [showEmailInfo, setShowEmailInfo] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [showPasswordInfo, setShowPasswordInfo] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showNewEyeIcon, setShowNewEyeIcon] = useState(false);
+  const [showConfirmEyeIcon, setShowConfirmEyeIcon] = useState(false);
 
-  const isValidEmail = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const validDomains = ['@gmail.com', '@yahoo.com'];
-    return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
+  const isValidPassword = () => {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/;
+    return passwordRegex.test(newPassword);
   };
 
-  const isValidPhone = () => {
-    const phoneWithoutCode = phone.replace(countryCallingCode, '').replace(/\s/g, '');
-    let isFormatValid = false;
-    switch (countryCode) {
-      case 'PK':
-      case 'US':
-      case 'CA':
-      case 'IN':
-      case 'GB':
-        isFormatValid = /^\d{10}$/.test(phoneWithoutCode);
-        break;
-      case 'AU':
-        isFormatValid = /^\d{9}$/.test(phoneWithoutCode);
-        break;
-      default:
-        isFormatValid = /^\d{9,11}$/.test(phoneWithoutCode);
-    }
-
-    const fullPhone = `${countryCallingCode}${phoneWithoutCode}`;
-    return isFormatValid && fullPhone === global.userPhone;
+  const passwordsMatch = () => {
+    return newPassword === confirmPassword;
   };
 
-  const handleCountrySelect = (country) => {
-    setCountryCode(country.cca2);
-    setCountryCallingCode(`+${country.callingCode[0]}`);
-    setPhone('');
-  };
-
-  const handleSendCode = () => {
-    if (method === 'email' && !isValidEmail()) {
+  const handleResetPassword = () => {
+    if (!isValidPassword()) {
       setShowAlert(true);
       return;
     }
 
-    if (method === 'SMS' && !isValidPhone()) {
+    if (!passwordsMatch()) {
       setShowAlert(true);
       return;
     }
 
-    const destination = method === 'email' ? email : `${countryCallingCode}${phone.replace(/\s/g, '')}`;
-    console.log(`Sending code via ${method} to:`, destination);
+    // Update password in global.users
+    const userIndex = global.users.findIndex((u) => u.email === email);
+    if (userIndex !== -1) {
+      global.users[userIndex].password = newPassword;
+    }
+
     setShowToast(true);
     setTimeout(() => {
-      navigation.navigate('EnterCode', { email: destination, method });
+      navigation.replace('Login');
     }, 3000);
   };
 
@@ -84,9 +64,9 @@ const ForgotPasswordScreen = ({ navigation }) => {
         visible={showAlert}
         title="Invalid Input"
         message={
-          method === 'email'
-            ? 'Please enter a valid email address ending with @gmail.com or @yahoo.com.'
-            : `Please enter a valid phone number for ${countryCode} (e.g., ${countryCallingCode} followed by ${countryCode === 'PK' ? '10 digits' : 'appropriate length'}). It must match your registered number.`
+          !isValidPassword()
+            ? 'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be 8-15 characters long.'
+            : 'Passwords do not match.'
         }
         onClose={() => setShowAlert(false)}
         onConfirm={() => setShowAlert(false)}
@@ -94,101 +74,90 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
       <CustomToast
         visible={showToast}
-        message="Code Sent Successfully!"
+        message="Password Reset Successfully!"
         type="success"
         onClose={() => setShowToast(false)}
       />
 
-      <EmailInfoPopup visible={showEmailInfo} onClose={() => setShowEmailInfo(false)} />
+      <PasswordInfoPopup visible={showPasswordInfo} onClose={() => setShowPasswordInfo(false)} />
+
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <MaterialIcons name="arrow-back" size={moderateScale(24)} color="#000" />
+      </TouchableOpacity>
 
       <Image source={require('../assets/icon.png')} style={styles.logo} />
-      <Text style={styles.title}>Forgot Password?</Text>
-      <Text style={styles.subtitle}>
-        Select how you would like to receive your verification code.
-      </Text>
+      <Text style={styles.title}>Reset Password</Text>
+      <Text style={styles.subtitle}>Enter your new password below.</Text>
 
-      <View style={styles.methodContainer}>
-        <TouchableOpacity
-          style={[
-            styles.methodButton,
-            method === 'email' && styles.activeMethodButton,
-            { borderTopLeftRadius: moderateScale(20), borderBottomLeftRadius: moderateScale(20) },
-          ]}
-          onPress={() => setMethod('email')}
-        >
-          <Text style={method === 'email' ? styles.activeMethodText : styles.methodText}>
-            Email
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.methodButton,
-            method === 'SMS' && styles.activeMethodButton,
-            { borderTopRightRadius: moderateScale(20), borderBottomRightRadius: moderateScale(20) },
-          ]}
-          onPress={() => setMethod('SMS')}
-        >
-          <Text style={method === 'SMS' ? styles.activeMethodText : styles.methodText}>
-            SMS
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {method === 'email' ? (
-        <View style={styles.inputContainer}>
-          <MaterialIcons name="email" size={moderateScale(20)} color="#666" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-          />
-          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowEmailInfo(true)}>
+      <View style={styles.inputContainer}>
+        <MaterialIcons name="lock" size={moderateScale(20)} color="#666" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="new password"
+          value={newPassword}
+          onChangeText={(text) => {
+            setNewPassword(text);
+            setShowNewEyeIcon(text.length > 0);
+          }}
+          secureTextEntry={!showNewPassword}
+          selectTextOnFocus={false}
+          contextMenuHidden={true}
+        />
+        {showNewEyeIcon ? (
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowNewPassword(true)}>
+            <MaterialIcons
+              name={showNewPassword ? 'visibility' : 'visibility-off'}
+              size={moderateScale(20)}
+              color="#666"
+            />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowPasswordInfo(true)}>
             <Text style={styles.infoIconText}>i</Text>
           </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.phoneContainer}>
-          <CountryPicker
-            withFilter
-            withCallingCode
-            withFlag
-            onSelect={handleCountrySelect}
-            countryCode={countryCode}
-            containerButtonStyle={styles.countryPicker}
-          />
-          <View style={styles.inputContainer}>
-            <Text style={styles.callingCode}>{countryCallingCode}</Text>
-            <TextInput
-              style={[styles.input, { paddingLeft: moderateScale(5) }]}
-              placeholder="phone number"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              maxLength={countryCode === 'AU' ? 9 : 11}
+        )}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <MaterialIcons name="lock" size={moderateScale(20)} color="#666" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="confirm password"
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            setShowConfirmEyeIcon(text.length > 0);
+          }}
+          secureTextEntry={!showConfirmPassword}
+          selectTextOnFocus={false}
+          contextMenuHidden={true}
+        />
+        {showConfirmEyeIcon ? (
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowConfirmPassword(true)}>
+            <MaterialIcons
+              name={showConfirmPassword ? 'visibility' : 'visibility-off'}
+              size={moderateScale(20)}
+              color="#666"
             />
-          </View>
-        </View>
-      )}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowPasswordInfo(true)}>
+            <Text style={styles.infoIconText}>i</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       <TouchableOpacity
-        style={[
-          styles.sendCodeButton,
-          {
-            opacity: method === 'email' ? (isValidEmail() ? 1 : 0.5) : (isValidPhone() ? 1 : 0.5),
-          },
-        ]}
-        onPress={handleSendCode}
-        disabled={method === 'email' ? !isValidEmail() : !isValidPhone()}
+        style={[styles.resetButton, { opacity: isValidPassword() && passwordsMatch() ? 1 : 0.5 }]}
+        onPress={handleResetPassword}
+        disabled={!(isValidPassword() && passwordsMatch())}
       >
-        <Text style={styles.sendCodeText}>Send Code</Text>
+        <Text style={styles.resetText}>Reset Password</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -196,6 +165,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: moderateScale(20),
+  },
+  backButton: {
+    position: 'absolute',
+    top: verticalScale(40),
+    left: moderateScale(20),
   },
   logo: {
     width: scale(120),
@@ -215,49 +189,14 @@ const styles = StyleSheet.create({
     marginVertical: verticalScale(10),
     marginBottom: verticalScale(20),
   },
-  methodContainer: {
-    flexDirection: 'row',
-    marginBottom: verticalScale(20),
-    width: '80%',
-  },
-  methodButton: {
-    flex: 1,
-    padding: moderateScale(10),
-    backgroundColor: '#e0e0e0',
-    alignItems: 'center',
-  },
-  activeMethodButton: {
-    backgroundColor: '#d32f2f',
-  },
-  methodText: {
-    color: '#000',
-    fontSize: scale(14),
-  },
-  activeMethodText: {
-    color: '#fff',
-    fontSize: scale(14),
-  },
-  phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '80%',
-    marginBottom: verticalScale(15),
-  },
-  countryPicker: {
-    marginRight: moderateScale(10),
-  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#e0e0e0',
     borderRadius: moderateScale(20),
+    marginBottom: verticalScale(15),
     paddingHorizontal: moderateScale(10),
-    flex: 1,
-  },
-  callingCode: {
-    fontSize: scale(14),
-    color: '#666',
-    marginRight: moderateScale(5),
+    width: '80%',
   },
   icon: {
     marginRight: moderateScale(10),
@@ -276,18 +215,18 @@ const styles = StyleSheet.create({
     color: '#666',
     fontStyle: 'italic',
   },
-  sendCodeButton: {
+  resetButton: {
     backgroundColor: '#d32f2f',
     padding: moderateScale(15),
     borderRadius: moderateScale(20),
     width: '80%',
     alignItems: 'center',
   },
-  sendCodeText: {
+  resetText: {
     color: '#fff',
     fontSize: scale(16),
     fontWeight: 'bold',
   },
 });
 
-export default ForgotPasswordScreen;
+export default PasswordRecoveryScreen;

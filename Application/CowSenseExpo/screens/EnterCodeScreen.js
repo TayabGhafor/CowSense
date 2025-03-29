@@ -1,3 +1,4 @@
+// screens/EnterCodeScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -7,92 +8,81 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import CustomAlert from '../components/CustomAlert';
 import CustomToast from '../components/CustomToast';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const EnterCodeScreen = ({ navigation, route }) => {
-  const { email, method } = route.params; // Get email or phone and method (email or SMS)
-  const [code, setCode] = useState(['', '', '', '']);
-  const [showResend, setShowResend] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
+  const { email, method } = route.params;
+  const [code, setCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
-  const [isResendDisabled, setIsResendDisabled] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState('success');
 
   useEffect(() => {
-    if (!showTimer) return;
-
     const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setShowTimer(false);
-          setIsResendDisabled(false);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimer((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
-
     return () => clearInterval(interval);
-  }, [showTimer]);
+  }, []);
 
   const handleCodeChange = (text, index) => {
     const newCode = [...code];
     newCode[index] = text;
     setCode(newCode);
 
-    if (text && index < 3) {
+    if (text && index < 5) {
       refs[index + 1].focus();
     }
   };
 
-  const refs = [];
-
-  const handleVerify = () => {
-    const enteredCode = code.join('');
-    // Mock verification: assume the correct code is "1234"
-    if (enteredCode === '1234') {
-      setToastMessage('Code matched Successfully!');
-      setToastType('success');
-      setShowToast(true);
-      setTimeout(() => {
-        navigation.navigate('PasswordRecovery', { email });
-      }, 3000);
-    } else {
-      setToastMessage("Code didn't match! Retry");
-      setToastType('error');
-      setShowToast(true);
-      setShowResend(true);
-      setTimer(60); // Reset timer to 60
-      setShowTimer(false); // Ensure timer isn’t triggered here
-      setIsResendDisabled(false); // Allow resend immediately after failure
-    }
-  };
+  const refs = Array(6)
+    .fill()
+    .map(() => React.createRef());
 
   const handleResendCode = () => {
-    console.log(`Resending code via ${method} to:`, email);
-    setCode(['', '', '', '']);
     setTimer(60);
-    setShowTimer(true); // Show timer when resend is clicked
-    setIsResendDisabled(true); // Disable resend button during countdown
+    setCode(['', '', '', '', '', '']);
+    setShowToast(true);
+  };
+
+  const handleVerifyCode = () => {
+    const enteredCode = code.join('');
+    if (enteredCode.length !== 6 || !/^\d{6}$/.test(enteredCode)) {
+      setShowAlert(true);
+      return;
+    }
+
+    console.log('Verifying code:', enteredCode);
+    navigation.navigate('PasswordRecovery', { email });
   };
 
   return (
     <View style={styles.container}>
+      <CustomAlert
+        visible={showAlert}
+        title="Invalid Code"
+        message="Please enter a valid 6-digit code."
+        onClose={() => setShowAlert(false)}
+        onConfirm={() => setShowAlert(false)}
+      />
+
       <CustomToast
         visible={showToast}
-        message={toastMessage}
-        type={toastType}
+        message="Code Resent Successfully!"
+        type="success"
         onClose={() => setShowToast(false)}
       />
 
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <MaterialIcons name="arrow-back" size={moderateScale(24)} color="#000" />
+      </TouchableOpacity>
+
       <Image source={require('../assets/icon.png')} style={styles.logo} />
-      <Text style={styles.title}>Verify Code.</Text>
+      <Text style={styles.title}>Enter Code</Text>
       <Text style={styles.subtitle}>
-        Enter the Code, We just sent you on your {method}
+        We have sent a 6-digit code to {method === 'email' ? 'your email' : 'your phone'}.
       </Text>
 
       <View style={styles.codeContainer}>
@@ -110,28 +100,23 @@ const EnterCodeScreen = ({ navigation, route }) => {
         ))}
       </View>
 
-      {showResend && (
-        <View style={styles.resendContainer}>
-          <TouchableOpacity
-            onPress={handleResendCode}
-            disabled={isResendDisabled}
-            style={[
-              styles.resendButton,
-              isResendDisabled && styles.disabledButton, // Add visual feedback for disabled state
-            ]}
-          >
-            <Text style={styles.resendText}>Resend Code</Text>
+      <View style={styles.timerContainer}>
+        <Text style={styles.timerText}>
+          {timer > 0 ? `Resend code in ${timer}s` : 'Resend code now'}
+        </Text>
+        {timer === 0 && (
+          <TouchableOpacity onPress={handleResendCode}>
+            <Text style={styles.resendLink}>Resend</Text>
           </TouchableOpacity>
-          {showTimer && (
-            <Text style={styles.timerText}>
-              {`0:${timer < 10 ? `0${timer}` : timer}`}
-            </Text>
-          )}
-        </View>
-      )}
+        )}
+      </View>
 
-      <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
-        <Text style={styles.verifyText}>Verify</Text>
+      <TouchableOpacity
+        style={[styles.verifyButton, { opacity: code.join('').length === 6 ? 1 : 0.5 }]}
+        onPress={handleVerifyCode}
+        disabled={code.join('').length !== 6}
+      >
+        <Text style={styles.verifyText}>Verify Code</Text>
       </TouchableOpacity>
     </View>
   );
@@ -144,6 +129,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: moderateScale(20),
+  },
+  backButton: {
+    position: 'absolute',
+    top: verticalScale(40),
+    left: moderateScale(20),
   },
   logo: {
     width: scale(120),
@@ -166,37 +156,31 @@ const styles = StyleSheet.create({
   codeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '60%',
+    width: '80%',
     marginBottom: verticalScale(20),
   },
   codeInput: {
     width: scale(40),
-    height: verticalScale(40),
+    height: verticalScale(50),
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: moderateScale(5),
+    borderRadius: moderateScale(10),
     fontSize: scale(20),
     textAlign: 'center',
   },
-  resendContainer: {
+  timerContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '60%',
+    alignItems: 'center',
     marginBottom: verticalScale(20),
-  },
-  resendButton: {
-    padding: moderateScale(5),
-  },
-  disabledButton: {
-    opacity: 0.5, // Visual feedback for disabled state
-  },
-  resendText: {
-    color: '#1e88e5',
-    fontSize: scale(14),
   },
   timerText: {
     fontSize: scale(14),
     color: '#666',
+  },
+  resendLink: {
+    fontSize: scale(14),
+    color: '#1e88e5',
+    marginLeft: moderateScale(5),
   },
   verifyButton: {
     backgroundColor: '#d32f2f',

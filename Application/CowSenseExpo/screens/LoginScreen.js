@@ -19,6 +19,7 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('veterinarian');
   const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
   const [showPasswordInfo, setShowPasswordInfo] = useState(false);
   const [showEmailInfo, setShowEmailInfo] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -46,29 +47,28 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = () => {
     if (!isValidEmail()) {
+      setAlertMessage('Please enter a valid email address ending with @gmail.com or @yahoo.com.');
       setShowAlert(true);
       return;
     }
 
     if (!isValidPassword()) {
+      setAlertMessage(
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be 8-15 characters long.'
+      );
       setShowAlert(true);
       return;
     }
 
-    // Test credentials
-    const vetCredentials = { email: 'vet@gmail.com', password: '123456' };
-    const farmerCredentials = { email: 'Ran@gmail.com', password: '123123' };
+    // Validate credentials
+    const user = global.users.find(
+      (u) => u.email === email && u.password === password && u.role === role
+    );
 
-    if (role === 'veterinarian') {
-      if (email !== vetCredentials.email || password !== vetCredentials.password) {
-        setShowAlert(true);
-        return;
-      }
-    } else {
-      if (email !== farmerCredentials.email || password !== farmerCredentials.password) {
-        setShowAlert(true);
-        return;
-      }
+    if (!user) {
+      setAlertMessage('Invalid credentials. Please check your email, password, and role.');
+      setShowAlert(true);
+      return;
     }
 
     console.log('Login:', { email, password, role });
@@ -76,9 +76,9 @@ const LoginScreen = ({ navigation }) => {
     // Check if first-time login
     if (!global.isFirstLogin) {
       global.isFirstLogin = true;
-      navigation.navigate('ProfileSetup', { name: 'John Doe', email, role }); // Mock name for now
+      navigation.navigate('ProfileSetup', { name: user.name, email, role });
     } else {
-      navigation.navigate(role === 'veterinarian' ? 'VetHome' : 'FarmerHome');
+      navigation.replace(role === 'veterinarian' ? 'VetHome' : 'FarmerHome');
     }
   };
 
@@ -87,13 +87,7 @@ const LoginScreen = ({ navigation }) => {
       <CustomAlert
         visible={showAlert}
         title="Invalid Input"
-        message={
-          !isValidEmail()
-            ? 'Please enter a valid email address ending with @gmail.com or @yahoo.com.'
-            : !isValidPassword()
-            ? 'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be 8-15 characters long.'
-            : 'Invalid credentials for the selected role.'
-        }
+        message={alertMessage}
         onClose={() => setShowAlert(false)}
         onConfirm={() => setShowAlert(false)}
       />
@@ -211,7 +205,6 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

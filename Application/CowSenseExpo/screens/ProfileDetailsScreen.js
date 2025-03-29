@@ -1,4 +1,4 @@
-// screens/ProfileSetupScreen.js
+// screens/ProfileDetailsScreen.js
 import React, { useState } from 'react';
 import {
   View,
@@ -12,21 +12,27 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import CountryPicker from 'react-native-country-picker-modal';
+import CustomToast from '../components/CustomToast';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
-const ProfileSetupScreen = ({ navigation, route }) => {
-  const { name, email, role } = route.params;
-  const [profileImage, setProfileImage] = useState(null);
-  const [age, setAge] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [gender, setGender] = useState('');
-  const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState('PK');
-  const [countryCallingCode, setCountryCallingCode] = useState('+92');
-  const [showGenderPicker, setShowGenderPicker] = useState(false);
+const ProfileDetailsScreen = ({ navigation }) => {
+  // Fetch user data from global.users
+  const user = global.users.find((u) => u.email === global.currentUserEmail) || {};
+  const [profileImage, setProfileImage] = useState(user.profileImage || null);
+  const [name, setName] = useState(user.name || '');
+  const [email, setEmail] = useState(user.email || '');
+  const [age, setAge] = useState(user.age || '');
+  const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth || '');
+  const [gender, setGender] = useState(user.gender || '');
+  const [phone, setPhone] = useState(user.phone || global.userPhone || '');
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showDone, setShowDone] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [showGenderPicker, setShowGenderPicker] = useState(false);
+  const [isNameEditable, setIsNameEditable] = useState(false);
+  const [isAgeEditable, setIsAgeEditable] = useState(false);
+  const [isDateOfBirthEditable, setIsDateOfBirthEditable] = useState(false);
 
   const handleImagePick = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -47,74 +53,84 @@ const ProfileSetupScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleCountrySelect = (country) => {
-    setCountryCode(country.cca2);
-    setCountryCallingCode(`+${country.callingCode[0]}`);
-    setPhone('');
-  };
-
-  const isValidPhone = () => {
-    const phoneWithoutCode = phone.replace(countryCallingCode, '').replace(/\s/g, '');
-    switch (countryCode) {
-      case 'PK':
-      case 'US':
-      case 'CA':
-      case 'IN':
-      case 'GB':
-        return /^\d{10}$/.test(phoneWithoutCode);
-      case 'AU':
-        return /^\d{9}$/.test(phoneWithoutCode);
-      default:
-        return /^\d{9,11}$/.test(phoneWithoutCode);
-    }
-  };
-
   const handleSave = () => {
-    if (!age || !dateOfBirth || !gender || !isValidPhone()) {
-      alert('Please fill all fields correctly.');
-      return;
+    const userIndex = global.users.findIndex((u) => u.email === email);
+    if (userIndex !== -1) {
+      global.users[userIndex] = {
+        ...global.users[userIndex],
+        profileImage,
+        name,
+        age,
+        dateOfBirth,
+        gender,
+      };
     }
 
-    global.userPhone = `${countryCallingCode}${phone.replace(/\s/g, '')}`;
+    setShowToast(true);
+    setIsNameEditable(false);
+    setIsAgeEditable(false);
+    setIsDateOfBirthEditable(false);
+  };
 
+  const handleLogout = () => {
+    setShowLogoutPopup(false);
     setShowLoader(true);
     setTimeout(() => {
       setShowLoader(false);
-      setShowSuccessPopup(true);
+      setShowDone(true);
       setTimeout(() => {
-        setShowSuccessPopup(false);
-        navigation.replace(role === 'veterinarian' ? 'VetHome' : 'FarmerHome');
-      }, 2000);
-    }, 2000);
+        setShowDone(false);
+        global.isFirstLogin = false;
+        navigation.replace('Login');
+      }, 1000);
+    }, 1000);
   };
 
   return (
     <View style={styles.container}>
-      <Modal transparent visible={showLoader} animationType="fade">
-        <View style={styles.loaderOverlay}>
-          <ActivityIndicator size="large" color="#d32f2f" />
-        </View>
-      </Modal>
-
-      <Modal transparent visible={showSuccessPopup} animationType="fade">
+      <Modal transparent visible={showLogoutPopup} animationType="fade">
         <View style={styles.popupOverlay}>
           <View style={styles.popupContainer}>
-            <View style={styles.checkCircle}>
-              <MaterialIcons name="check" size={moderateScale(40)} color="#fff" />
+            <Text style={styles.popupTitle}>Are you sure you want to log out?</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.optionButton, styles.cancelButton]}
+                onPress={() => setShowLogoutPopup(false)}
+              >
+                <Text style={styles.optionText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.optionButton, styles.logoutButton]}
+                onPress={handleLogout}
+              >
+                <Text style={styles.optionText}>Log Out</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.popupTitle}>CONGRATULATIONS!</Text>
-            <Text style={styles.popupMessage}>
-              Your account is ready to use. You will be directed to the Home Page in a few seconds
-            </Text>
-            <ActivityIndicator size="small" color="#666" style={styles.popupLoader} />
           </View>
         </View>
       </Modal>
 
+      <Modal transparent visible={showLoader || showDone} animationType="fade">
+        <View style={styles.loaderOverlay}>
+          {showLoader ? (
+            <ActivityIndicator size="large" color="#d32f2f" />
+          ) : (
+            <MaterialIcons name="check" size={moderateScale(60)} color="#d32f2f" />
+          )}
+        </View>
+      </Modal>
+
+      <CustomToast
+        visible={showToast}
+        message="Profile Updated Successfully!"
+        type="success"
+        onClose={() => setShowToast(false)}
+      />
+
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
         <MaterialIcons name="arrow-back" size={moderateScale(24)} color="#000" />
       </TouchableOpacity>
-      <Text style={styles.title}>Fill Your Profile</Text>
+      <Text style={styles.title}>Profile Details</Text>
 
       <TouchableOpacity onPress={handleImagePick} style={styles.imageContainer}>
         {profileImage ? (
@@ -128,7 +144,18 @@ const ProfileSetupScreen = ({ navigation, route }) => {
 
       <View style={styles.inputContainer}>
         <MaterialIcons name="person" size={moderateScale(20)} color="#666" style={styles.icon} />
-        <TextInput style={styles.input} value={name} editable={false} />
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          editable={isNameEditable}
+        />
+        <TouchableOpacity
+          style={styles.editIcon}
+          onPress={() => setIsNameEditable(!isNameEditable)}
+        >
+          <MaterialIcons name="edit" size={moderateScale(20)} color="#666" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.inputContainer}>
@@ -144,7 +171,14 @@ const ProfileSetupScreen = ({ navigation, route }) => {
           value={age}
           onChangeText={setAge}
           keyboardType="numeric"
+          editable={isAgeEditable}
         />
+        <TouchableOpacity
+          style={styles.editIcon}
+          onPress={() => setIsAgeEditable(!isAgeEditable)}
+        >
+          <MaterialIcons name="edit" size={moderateScale(20)} color="#666" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.inputContainer}>
@@ -154,7 +188,14 @@ const ProfileSetupScreen = ({ navigation, route }) => {
           placeholder="date of birth (DD/MM/YYYY)"
           value={dateOfBirth}
           onChangeText={setDateOfBirth}
+          editable={isDateOfBirthEditable}
         />
+        <TouchableOpacity
+          style={styles.editIcon}
+          onPress={() => setIsDateOfBirthEditable(!isDateOfBirthEditable)}
+        >
+          <MaterialIcons name="edit" size={moderateScale(20)} color="#666" />
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity
@@ -187,35 +228,28 @@ const ProfileSetupScreen = ({ navigation, route }) => {
       )}
 
       <View style={styles.inputContainer}>
-        <CountryPicker
-          withFilter
-          withCallingCode
-          withFlag
-          onSelect={handleCountrySelect}
-          countryCode={countryCode}
-          containerButtonStyle={styles.countryPicker}
-        />
-        <View style={styles.phoneInputContainer}>
-          <Text style={styles.callingCode}>{countryCallingCode}</Text>
-          <TextInput
-            style={styles.phoneInput}
-            placeholder="phone number"
-            placeholderTextColor="#666"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            maxLength={countryCode === 'AU' ? 9 : 11}
-          />
-        </View>
+        <MaterialIcons name="phone" size={moderateScale(20)} color="#666" style={styles.icon} />
+        <TextInput style={styles.input} value={phone} editable={false} />
       </View>
 
-      <TouchableOpacity
-        style={[styles.saveButton, { opacity: age && dateOfBirth && gender && isValidPhone() ? 1 : 0.5 }]}
-        onPress={handleSave}
-        disabled={!(age && dateOfBirth && gender && isValidPhone())}
-      >
+      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveText}>Save</Text>
       </TouchableOpacity>
+
+      <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.settingsButton]}
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <MaterialIcons name="settings" size={moderateScale(24)} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.logoutButton]}
+          onPress={() => setShowLogoutPopup(true)}
+        >
+          <MaterialIcons name="logout" size={moderateScale(24)} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -279,6 +313,10 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: '#666',
   },
+  editIcon: {
+    marginLeft: moderateScale(10),
+    padding: moderateScale(5),
+  },
   genderPicker: {
     backgroundColor: '#e0e0e0',
     borderRadius: moderateScale(10),
@@ -289,47 +327,39 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
     paddingVertical: verticalScale(5),
   },
-  countryPicker: {
-    marginRight: moderateScale(10),
-  },
-  phoneInputContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e0e0e0',
-    borderRadius: moderateScale(20),
-    paddingHorizontal: moderateScale(10),
-  },
-  callingCode: {
-    fontSize: scale(14),
-    color: '#666',
-    marginRight: moderateScale(5),
-  },
-  phoneInput: {
-    flex: 1,
-    padding: moderateScale(10),
-    fontSize: scale(14),
-    color: '#000',
-  },
   saveButton: {
     backgroundColor: '#d32f2f',
     padding: moderateScale(15),
     borderRadius: moderateScale(20),
     width: '100%',
     alignItems: 'center',
+    marginBottom: verticalScale(20),
   },
   saveText: {
     color: '#fff',
     fontSize: scale(16),
     fontWeight: 'bold',
   },
-  loaderOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  actionButton: {
+    width: '48%',
+    padding: moderateScale(15),
+    borderRadius: moderateScale(20),
     alignItems: 'center',
   },
+  settingsButton: {
+    backgroundColor: '#e0e0e0',
+  },
+  logoutButton: {
+    backgroundColor: '#d32f2f',
+  },
   popupOverlay: {
+
+
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
@@ -342,30 +372,41 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
   },
-  checkCircle: {
-    width: scale(60),
-    height: scale(60),
-    borderRadius: scale(30),
-    backgroundColor: '#d32f2f',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: verticalScale(10),
-  },
   popupTitle: {
     fontSize: scale(18),
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: verticalScale(10),
-  },
-  popupMessage: {
-    fontSize: scale(14),
-    color: '#666',
-    textAlign: 'center',
     marginBottom: verticalScale(20),
   },
-  popupLoader: {
-    marginTop: verticalScale(10),
+  buttonContainer: {
+    flexDirection: 'row',
+    width: '100%',
+  },
+  optionButton: {
+    flex: 1,
+    padding: moderateScale(10),
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#e0e0e0',
+    borderTopLeftRadius: moderateScale(20),
+    borderBottomLeftRadius: moderateScale(20),
+  },
+  logoutButton: {
+    backgroundColor: '#d32f2f',
+    borderTopRightRadius: moderateScale(20),
+    borderBottomRightRadius: moderateScale(20),
+  },
+  optionText: {
+    fontSize: scale(14),
+    color: '#fff',
+  },
+  loaderOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
-export default ProfileSetupScreen;
+export default ProfileDetailsScreen;

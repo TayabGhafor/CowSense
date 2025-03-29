@@ -1,15 +1,35 @@
 // screens/VetHomeScreen.js
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import NotificationPopup from '../components/NotificationPopup';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const VetHomeScreen = ({ navigation }) => {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const homeScale = useSharedValue(1);
+
+  const animatedHomeStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: withSpring(homeScale.value) }],
+    };
+  });
+
+  const handleHomePress = () => {
+    homeScale.value = 1.2;
+  };
+
   return (
     <View style={styles.container}>
+      <NotificationPopup
+        visible={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
+
       <View style={styles.header}>
         <Text style={styles.title}>Veterinarian’s Homepage</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowNotifications(true)}>
           <MaterialIcons name="notifications" size={moderateScale(24)} color="#000" />
         </TouchableOpacity>
       </View>
@@ -61,13 +81,18 @@ const VetHomeScreen = ({ navigation }) => {
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <MaterialIcons name="home" size={moderateScale(24)} color="#666" />
+        <TouchableOpacity onPress={handleHomePress}>
+          <Animated.View style={animatedHomeStyle}>
+            <MaterialIcons name="home" size={moderateScale(24)} color="#d32f2f" />
+          </Animated.View>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Camera')}>
           <MaterialIcons name="camera-alt" size={moderateScale(24)} color="#666" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
+          <MaterialIcons name="chat" size={moderateScale(24)} color="#666" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileDetails')}>
           <MaterialIcons name="person" size={moderateScale(24)} color="#666" />
         </TouchableOpacity>
       </View>

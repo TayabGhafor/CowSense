@@ -12,7 +12,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import CustomAlert from '../components/CustomAlert';
 import CustomToast from '../components/CustomToast';
 import EmailInfoPopup from '../components/EmailInfoPopup';
-import ModernCountryPicker from '../components/ModernCountryPicker';
+import CountryPicker from 'react-native-country-picker-modal';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const ForgotPasswordScreen = ({ navigation }) => {
@@ -101,6 +101,10 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
       <EmailInfoPopup visible={showEmailInfo} onClose={() => setShowEmailInfo(false)} />
 
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <MaterialIcons name="arrow-back" size={moderateScale(24)} color="#000" />
+      </TouchableOpacity>
+
       <Image source={require('../assets/icon.png')} style={styles.logo} />
       <Text style={styles.title}>Forgot Password?</Text>
       <Text style={styles.subtitle}>
@@ -135,25 +139,23 @@ const ForgotPasswordScreen = ({ navigation }) => {
       </View>
 
       {method === 'email' ? (
-        <View style={styles.phoneContainer}>
-          <View style={styles.inputContainer}>
-            <MaterialIcons name="email" size={moderateScale(20)} color="#666" style={styles.icon} />
-            <TextInput
-              style={styles.input}
-              placeholder="email"
-              placeholderTextColor="#666"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-            />
-            <TouchableOpacity style={styles.infoIcon} onPress={() => setShowEmailInfo(true)}>
-              <Text style={styles.infoIconText}>i</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.inputContainer}>
+          <MaterialIcons name="email" size={moderateScale(20)} color="#666" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="email"
+            placeholderTextColor="#666"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+          />
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowEmailInfo(true)}>
+            <Text style={styles.infoIconText}>i</Text>
+          </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.phoneContainer}>
-          <ModernCountryPicker
+        <View style={styles.inputContainer}>
+          <CountryPicker
             withFilter
             withCallingCode
             withFlag
@@ -161,12 +163,12 @@ const ForgotPasswordScreen = ({ navigation }) => {
             countryCode={countryCode}
             containerButtonStyle={styles.countryPicker}
           />
-          <View style={styles.inputContainer}>
+          <View style={styles.phoneInputContainer}>
             <Text style={styles.callingCode}>{countryCallingCode}</Text>
             <TextInput
-              style={[styles.input, { paddingLeft: moderateScale(5) }]}
+              style={styles.phoneInput}
               placeholder="phone number"
-              placeholderTextColor="#666" // Ensure consistency
+              placeholderTextColor="#666"
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -199,6 +201,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: moderateScale(20),
+  },
+  backButton: {
+    position: 'absolute',
+    top: verticalScale(40),
+    left: moderateScale(20),
   },
   logo: {
     width: scale(120),
@@ -240,23 +247,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: scale(14),
   },
-  phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '80%',
-    marginBottom: verticalScale(15),
-  },
-  countryPicker: {
-    marginRight: moderateScale(10),
-  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#e0e0e0',
     borderRadius: moderateScale(20),
     paddingHorizontal: moderateScale(10),
-    height: verticalScale(45),
+    width: '80%',
+    marginBottom: verticalScale(15),
+  },
+  countryPicker: {
+    marginRight: moderateScale(10),
+  },
+  phoneInputContainer: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+    borderRadius: moderateScale(20),
+    paddingHorizontal: moderateScale(10),
   },
   callingCode: {
     fontSize: scale(14),
@@ -268,16 +277,19 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    height: '100%',
+    padding: moderateScale(10),
     fontSize: scale(14),
     color: '#000',
-    padding: 0,
+  },
+  phoneInput: {
+    flex: 1,
+    padding: moderateScale(10),
+    fontSize: scale(14),
+    color: '#000',
   },
   infoIcon: {
     marginLeft: moderateScale(10),
     padding: moderateScale(5),
-    height: '100%',
-    justifyContent: 'center',
   },
   infoIconText: {
     fontSize: scale(14),
