@@ -1,3 +1,4 @@
+// screens/SignUpScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -24,29 +25,25 @@ const SignUpScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showEyeIcon, setShowEyeIcon] = useState(false);
 
-  // Timer for password visibility
   useEffect(() => {
     if (showPassword) {
       const timer = setTimeout(() => {
         setShowPassword(false);
-      }, 10000); // 10 seconds
+      }, 10000);
       return () => clearTimeout(timer);
     }
   }, [showPassword]);
 
-  // Name validation
   const isValidName = () => {
     return name.trim().length > 0;
   };
 
-  // Email validation
   const isValidEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const validDomains = ['@gmail.com', '@yahoo.com'];
     return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
   };
 
-  // Password validation
   const isValidPassword = () => {
     const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/;
     return passwordRegex.test(password);
@@ -69,12 +66,12 @@ const SignUpScreen = ({ navigation }) => {
     }
 
     console.log('SignUp:', { name, email, password, role });
-    navigation.navigate('Login');
+    global.isFirstLogin = true; // Set first-time login flag
+    navigation.navigate('ProfileSetup', { name, email, role });
   };
 
   return (
     <View style={styles.container}>
-      {/* Custom Alert for Invalid Input */}
       <CustomAlert
         visible={showAlert}
         title="Invalid Input"
@@ -89,26 +86,13 @@ const SignUpScreen = ({ navigation }) => {
         onConfirm={() => setShowAlert(false)}
       />
 
-      {/* Password Info Popup */}
-      <PasswordInfoPopup
-        visible={showPasswordInfo}
-        onClose={() => setShowPasswordInfo(false)}
-      />
+      <PasswordInfoPopup visible={showPasswordInfo} onClose={() => setShowPasswordInfo(false)} />
+      <EmailInfoPopup visible={showEmailInfo} onClose={() => setShowEmailInfo(false)} />
 
-      {/* Email Info Popup */}
-      <EmailInfoPopup
-        visible={showEmailInfo}
-        onClose={() => setShowEmailInfo(false)}
-      />
-
-      <Image
-        source={require('../assets/icon.png')} // Replace with your logo
-        style={styles.logo}
-      />
+      <Image source={require('../assets/icon.png')} style={styles.logo} />
       <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>We are here to help you!</Text>
 
-      {/* Role Selection */}
       <View style={styles.roleContainer}>
         <TouchableOpacity
           style={[
@@ -118,13 +102,7 @@ const SignUpScreen = ({ navigation }) => {
           ]}
           onPress={() => setRole('veterinarian')}
         >
-          <Text
-            style={
-              role === 'veterinarian'
-                ? styles.activeRoleText
-                : styles.roleText
-            }
-          >
+          <Text style={role === 'veterinarian' ? styles.activeRoleText : styles.roleText}>
             Veterinarian
           </Text>
         </TouchableOpacity>
@@ -136,38 +114,19 @@ const SignUpScreen = ({ navigation }) => {
           ]}
           onPress={() => setRole('farmer')}
         >
-          <Text
-            style={role === 'farmer' ? styles.activeRoleText : styles.roleText}
-          >
+          <Text style={role === 'farmer' ? styles.activeRoleText : styles.roleText}>
             Rancher
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Name Input */}
       <View style={styles.inputContainer}>
-        <MaterialIcons
-          name="person"
-          size={moderateScale(20)}
-          color="#666"
-          style={styles.icon}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="your name"
-          value={name}
-          onChangeText={setName}
-        />
+        <MaterialIcons name="person" size={moderateScale(20)} color="#666" style={styles.icon} />
+        <TextInput style={styles.input} placeholder="your name" value={name} onChangeText={setName} />
       </View>
 
-      {/* Email Input with Info Icon */}
       <View style={styles.inputContainer}>
-        <MaterialIcons
-          name="email"
-          size={moderateScale(20)}
-          color="#666"
-          style={styles.icon}
-        />
+        <MaterialIcons name="email" size={moderateScale(20)} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
           placeholder="email"
@@ -175,15 +134,11 @@ const SignUpScreen = ({ navigation }) => {
           onChangeText={setEmail}
           keyboardType="email-address"
         />
-        <TouchableOpacity
-          style={styles.infoIcon}
-          onPress={() => setShowEmailInfo(true)}
-        >
+        <TouchableOpacity style={styles.infoIcon} onPress={() => setShowEmailInfo(true)}>
           <Text style={styles.infoIconText}>i</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Password Input with Info/Show Icon */}
       <View style={styles.inputContainer}>
         <MaterialIcons name="lock" size={moderateScale(20)} color="#666" style={styles.icon} />
         <TextInput
@@ -192,17 +147,14 @@ const SignUpScreen = ({ navigation }) => {
           value={password}
           onChangeText={(text) => {
             setPassword(text);
-            setShowEyeIcon(text.length > 0); // Show eye icon when typing starts
+            setShowEyeIcon(text.length > 0);
           }}
           secureTextEntry={!showPassword}
-          selectTextOnFocus={false} // Prevent copying
-          contextMenuHidden={true} // Disable context menu (copy/paste)
+          selectTextOnFocus={false}
+          contextMenuHidden={true}
         />
         {showEyeIcon ? (
-          <TouchableOpacity
-            style={styles.infoIcon}
-            onPress={() => setShowPassword(true)}
-          >
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowPassword(true)}>
             <MaterialIcons
               name={showPassword ? 'visibility' : 'visibility-off'}
               size={moderateScale(20)}
@@ -210,35 +162,26 @@ const SignUpScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            style={styles.infoIcon}
-            onPress={() => setShowPasswordInfo(true)}
-          >
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowPasswordInfo(true)}>
             <Text style={styles.infoIconText}>i</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Create Account Button */}
       <TouchableOpacity
-        style={[
-          styles.signInButton,
-          { opacity: isValidName() && isValidEmail() && isValidPassword() ? 1 : 0.5 },
-        ]}
+        style={[styles.signInButton, { opacity: isValidName() && isValidEmail() && isValidPassword() ? 1 : 0.5 }]}
         onPress={handleSignUp}
         disabled={!(isValidName() && isValidEmail() && isValidPassword())}
       >
         <Text style={styles.signInText}>Create Account</Text>
       </TouchableOpacity>
 
-      {/* Separator */}
       <View style={styles.separator}>
         <View style={styles.line} />
         <Text style={styles.orText}>or</Text>
         <View style={styles.line} />
       </View>
 
-      {/* Social Login Buttons */}
       <TouchableOpacity style={styles.socialButton}>
         <FontAwesome name="facebook" size={moderateScale(20)} color="#fff" style={styles.socialIcon} />
         <Text style={styles.socialText}>Sign In with Facebook</Text>
@@ -248,7 +191,6 @@ const SignUpScreen = ({ navigation }) => {
         <Text style={styles.googleText}>Sign In with Google</Text>
       </TouchableOpacity>
 
-      {/* Link */}
       <View style={styles.signUpContainer}>
         <Text style={styles.signUpText}>Don’t have an account yet? </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -259,6 +201,7 @@ const SignUpScreen = ({ navigation }) => {
   );
 };
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

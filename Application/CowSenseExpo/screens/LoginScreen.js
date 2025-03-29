@@ -1,3 +1,4 @@
+// screens/LoginScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -23,24 +24,21 @@ const LoginScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showEyeIcon, setShowEyeIcon] = useState(false);
 
-  // Timer for password visibility
   useEffect(() => {
     if (showPassword) {
       const timer = setTimeout(() => {
         setShowPassword(false);
-      }, 10000); // 10 seconds
+      }, 10000);
       return () => clearTimeout(timer);
     }
   }, [showPassword]);
 
-  // Email validation
   const isValidEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const validDomains = ['@gmail.com', '@yahoo.com'];
     return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
   };
 
-  // Password validation
   const isValidPassword = () => {
     const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/;
     return passwordRegex.test(password);
@@ -57,49 +55,56 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
-    console.log('Login:', { email, password, role });
+    // Test credentials
+    const vetCredentials = { email: 'vet@gmail.com', password: '123456' };
+    const farmerCredentials = { email: 'Ran@gmail.com', password: '123123' };
+
     if (role === 'veterinarian') {
-      navigation.navigate('VetHome');
+      if (email !== vetCredentials.email || password !== vetCredentials.password) {
+        setShowAlert(true);
+        return;
+      }
     } else {
-      navigation.navigate('FarmerHome');
+      if (email !== farmerCredentials.email || password !== farmerCredentials.password) {
+        setShowAlert(true);
+        return;
+      }
+    }
+
+    console.log('Login:', { email, password, role });
+
+    // Check if first-time login
+    if (!global.isFirstLogin) {
+      global.isFirstLogin = true;
+      navigation.navigate('ProfileSetup', { name: 'John Doe', email, role }); // Mock name for now
+    } else {
+      navigation.navigate(role === 'veterinarian' ? 'VetHome' : 'FarmerHome');
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Custom Alert for Invalid Input */}
       <CustomAlert
         visible={showAlert}
         title="Invalid Input"
         message={
           !isValidEmail()
             ? 'Please enter a valid email address ending with @gmail.com or @yahoo.com.'
-            : 'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be 8-15 characters long.'
+            : !isValidPassword()
+            ? 'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be 8-15 characters long.'
+            : 'Invalid credentials for the selected role.'
         }
         onClose={() => setShowAlert(false)}
         onConfirm={() => setShowAlert(false)}
       />
 
-      {/* Password Info Popup */}
-      <PasswordInfoPopup
-        visible={showPasswordInfo}
-        onClose={() => setShowPasswordInfo(false)}
-      />
+      <PasswordInfoPopup visible={showPasswordInfo} onClose={() => setShowPasswordInfo(false)} />
+      <EmailInfoPopup visible={showEmailInfo} onClose={() => setShowEmailInfo(false)} />
 
-      {/* Email Info Popup */}
-      <EmailInfoPopup
-        visible={showEmailInfo}
-        onClose={() => setShowEmailInfo(false)}
-      />
-
-      <Image
-        source={require('../assets/icon.png')} // Replace with your logo
-        style={styles.logo}
-      />
+      <Image source={require('../assets/icon.png')} style={styles.logo} />
       <Text style={styles.title}>Hi, Welcome Back!</Text>
       <Text style={styles.subtitle}>Hope your cattle’s are doing fine.</Text>
 
-      {/* Role Selection */}
       <View style={styles.roleContainer}>
         <TouchableOpacity
           style={[
@@ -109,13 +114,7 @@ const LoginScreen = ({ navigation }) => {
           ]}
           onPress={() => setRole('veterinarian')}
         >
-          <Text
-            style={
-              role === 'veterinarian'
-                ? styles.activeRoleText
-                : styles.roleText
-            }
-          >
+          <Text style={role === 'veterinarian' ? styles.activeRoleText : styles.roleText}>
             Veterinarian
           </Text>
         </TouchableOpacity>
@@ -127,22 +126,14 @@ const LoginScreen = ({ navigation }) => {
           ]}
           onPress={() => setRole('farmer')}
         >
-          <Text
-            style={role === 'farmer' ? styles.activeRoleText : styles.roleText}
-          >
+          <Text style={role === 'farmer' ? styles.activeRoleText : styles.roleText}>
             Rancher
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Email Input with Info Icon */}
       <View style={styles.inputContainer}>
-        <MaterialIcons
-          name="email"
-          size={moderateScale(20)}
-          color="#666"
-          style={styles.icon}
-        />
+        <MaterialIcons name="email" size={moderateScale(20)} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
           placeholder="email"
@@ -150,15 +141,11 @@ const LoginScreen = ({ navigation }) => {
           onChangeText={setEmail}
           keyboardType="email-address"
         />
-        <TouchableOpacity
-          style={styles.infoIcon}
-          onPress={() => setShowEmailInfo(true)}
-        >
+        <TouchableOpacity style={styles.infoIcon} onPress={() => setShowEmailInfo(true)}>
           <Text style={styles.infoIconText}>i</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Password Input with Info/Show Icon */}
       <View style={styles.inputContainer}>
         <MaterialIcons name="lock" size={moderateScale(20)} color="#666" style={styles.icon} />
         <TextInput
@@ -167,17 +154,14 @@ const LoginScreen = ({ navigation }) => {
           value={password}
           onChangeText={(text) => {
             setPassword(text);
-            setShowEyeIcon(text.length > 0); // Show eye icon when typing starts
+            setShowEyeIcon(text.length > 0);
           }}
           secureTextEntry={!showPassword}
-          selectTextOnFocus={false} // Prevent copying
-          contextMenuHidden={true} // Disable context menu (copy/paste)
+          selectTextOnFocus={false}
+          contextMenuHidden={true}
         />
         {showEyeIcon ? (
-          <TouchableOpacity
-            style={styles.infoIcon}
-            onPress={() => setShowPassword(true)}
-          >
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowPassword(true)}>
             <MaterialIcons
               name={showPassword ? 'visibility' : 'visibility-off'}
               size={moderateScale(20)}
@@ -185,35 +169,26 @@ const LoginScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            style={styles.infoIcon}
-            onPress={() => setShowPasswordInfo(true)}
-          >
+          <TouchableOpacity style={styles.infoIcon} onPress={() => setShowPasswordInfo(true)}>
             <Text style={styles.infoIconText}>i</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Sign In Button */}
       <TouchableOpacity
-        style={[
-          styles.signInButton,
-          { opacity: isValidEmail() && isValidPassword() ? 1 : 0.5 },
-        ]}
+        style={[styles.signInButton, { opacity: isValidEmail() && isValidPassword() ? 1 : 0.5 }]}
         onPress={handleLogin}
         disabled={!(isValidEmail() && isValidPassword())}
       >
         <Text style={styles.signInText}>Sign In</Text>
       </TouchableOpacity>
 
-      {/* Separator */}
       <View style={styles.separator}>
         <View style={styles.line} />
         <Text style={styles.orText}>or</Text>
         <View style={styles.line} />
       </View>
 
-      {/* Social Login Buttons */}
       <TouchableOpacity style={styles.socialButton}>
         <FontAwesome name="facebook" size={moderateScale(20)} color="#fff" style={styles.socialIcon} />
         <Text style={styles.socialText}>Sign In with Facebook</Text>
@@ -223,7 +198,6 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.googleText}>Sign In with Google</Text>
       </TouchableOpacity>
 
-      {/* Links */}
       <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
         <Text style={styles.link}>Forgot Password?</Text>
       </TouchableOpacity>
@@ -237,6 +211,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

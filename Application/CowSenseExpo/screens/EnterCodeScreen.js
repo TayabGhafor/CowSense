@@ -11,7 +11,7 @@ import CustomToast from '../components/CustomToast';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const EnterCodeScreen = ({ navigation, route }) => {
-  const { email, method } = route.params; // Get email and method (email or SMS)
+  const { email, method } = route.params; // Get email or phone and method (email or SMS)
   const [code, setCode] = useState(['', '', '', '']);
   const [showResend, setShowResend] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
@@ -58,17 +58,17 @@ const EnterCodeScreen = ({ navigation, route }) => {
       setToastMessage('Code matched Successfully!');
       setToastType('success');
       setShowToast(true);
-      // Navigate to PasswordRecoveryScreen after the toast disappears
       setTimeout(() => {
         navigation.navigate('PasswordRecovery', { email });
       }, 3000);
     } else {
-      setToastMessage("Code didn't matched! Retry");
+      setToastMessage("Code didn't match! Retry");
       setToastType('error');
       setShowToast(true);
       setShowResend(true);
-      setTimer(60);
-      setIsResendDisabled(true);
+      setTimer(60); // Reset timer to 60
+      setShowTimer(false); // Ensure timer isn’t triggered here
+      setIsResendDisabled(false); // Allow resend immediately after failure
     }
   };
 
@@ -76,13 +76,12 @@ const EnterCodeScreen = ({ navigation, route }) => {
     console.log(`Resending code via ${method} to:`, email);
     setCode(['', '', '', '']);
     setTimer(60);
-    setShowTimer(true);
-    setIsResendDisabled(true);
+    setShowTimer(true); // Show timer when resend is clicked
+    setIsResendDisabled(true); // Disable resend button during countdown
   };
 
   return (
     <View style={styles.container}>
-      {/* Custom Toast for Success/Error */}
       <CustomToast
         visible={showToast}
         message={toastMessage}
@@ -90,11 +89,8 @@ const EnterCodeScreen = ({ navigation, route }) => {
         onClose={() => setShowToast(false)}
       />
 
-      <Image
-        source={require('../assets/logo.png')}
-        style={styles.logo}
-      />
-      <Text style={styles.title}>verify Code.</Text>
+      <Image source={require('../assets/icon.png')} style={styles.logo} />
+      <Text style={styles.title}>Verify Code.</Text>
       <Text style={styles.subtitle}>
         Enter the Code, We just sent you on your {method}
       </Text>
@@ -119,7 +115,10 @@ const EnterCodeScreen = ({ navigation, route }) => {
           <TouchableOpacity
             onPress={handleResendCode}
             disabled={isResendDisabled}
-            style={styles.resendButton}
+            style={[
+              styles.resendButton,
+              isResendDisabled && styles.disabledButton, // Add visual feedback for disabled state
+            ]}
           >
             <Text style={styles.resendText}>Resend Code</Text>
           </TouchableOpacity>
@@ -187,6 +186,9 @@ const styles = StyleSheet.create({
   },
   resendButton: {
     padding: moderateScale(5),
+  },
+  disabledButton: {
+    opacity: 0.5, // Visual feedback for disabled state
   },
   resendText: {
     color: '#1e88e5',

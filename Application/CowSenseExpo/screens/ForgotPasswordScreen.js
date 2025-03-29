@@ -1,3 +1,4 @@
+// screens/ForgotPasswordScreen.js
 import React, { useState } from 'react';
 import {
   View,
@@ -9,27 +10,53 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import CustomAlert from '../components/CustomAlert';
+import CustomToast from '../components/CustomToast';
 import EmailInfoPopup from '../components/EmailInfoPopup';
+import ModernCountryPicker from '../components/ModernCountryPicker';
 import { scale, verticalScale, moderateScale } from '../utils/scale';
 
 const ForgotPasswordScreen = ({ navigation }) => {
-  const [method, setMethod] = useState('email'); // Email or SMS
+  const [method, setMethod] = useState('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('PK');
+  const [countryCallingCode, setCountryCallingCode] = useState('+92');
   const [showAlert, setShowAlert] = useState(false);
   const [showEmailInfo, setShowEmailInfo] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
-  // Email validation
   const isValidEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const validDomains = ['@gmail.com', '@yahoo.com'];
     return emailRegex.test(email) && validDomains.some((domain) => email.endsWith(domain));
   };
 
-  // Phone validation (basic: 10 digits)
   const isValidPhone = () => {
-    const phoneRegex = /^\d{10}$/;
-    return phoneRegex.test(phone);
+    const phoneWithoutCode = phone.replace(countryCallingCode, '').replace(/\s/g, '');
+    let isFormatValid = false;
+    switch (countryCode) {
+      case 'PK':
+      case 'US':
+      case 'CA':
+      case 'IN':
+      case 'GB':
+        isFormatValid = /^\d{10}$/.test(phoneWithoutCode);
+        break;
+      case 'AU':
+        isFormatValid = /^\d{9}$/.test(phoneWithoutCode);
+        break;
+      default:
+        isFormatValid = /^\d{9,11}$/.test(phoneWithoutCode);
+    }
+
+    const fullPhone = `${countryCallingCode}${phoneWithoutCode}`;
+    return isFormatValid && fullPhone === global.userPhone;
+  };
+
+  const handleCountrySelect = (country) => {
+    setCountryCode(country.cca2);
+    setCountryCallingCode(`+${country.callingCode[0]}`);
+    setPhone('');
   };
 
   const handleSendCode = () => {
@@ -43,44 +70,43 @@ const ForgotPasswordScreen = ({ navigation }) => {
       return;
     }
 
-    // Mock the API call to send the code
-    console.log(`Sending code via ${method} to:`, method === 'email' ? email : phone);
-
-    // Navigate to EnterCodeScreen with the email/phone and method
-    navigation.navigate('EnterCode', { email: method === 'email' ? email : phone, method });
+    const destination = method === 'email' ? email : `${countryCallingCode}${phone.replace(/\s/g, '')}`;
+    console.log(`Sending code via ${method} to:`, destination);
+    setShowToast(true);
+    setTimeout(() => {
+      navigation.navigate('EnterCode', { email: destination, method });
+    }, 3000);
   };
 
   return (
     <View style={styles.container}>
-      {/* Custom Alert for Invalid Input */}
       <CustomAlert
         visible={showAlert}
         title="Invalid Input"
         message={
           method === 'email'
             ? 'Please enter a valid email address ending with @gmail.com or @yahoo.com.'
-            : 'Please enter a valid 10-digit phone number.'
+            : `Please enter a valid phone number for ${countryCode} (e.g., ${countryCallingCode} followed by ${countryCode === 'PK' ? '10 digits' : 'appropriate length'}). It must match your registered number.`
         }
         onClose={() => setShowAlert(false)}
         onConfirm={() => setShowAlert(false)}
       />
 
-      {/* Email Info Popup */}
-      <EmailInfoPopup
-        visible={showEmailInfo}
-        onClose={() => setShowEmailInfo(false)}
+      <CustomToast
+        visible={showToast}
+        message="Code Sent Successfully!"
+        type="success"
+        onClose={() => setShowToast(false)}
       />
 
-      <Image
-        source={require('../assets/logo.png')}
-        style={styles.logo}
-      />
+      <EmailInfoPopup visible={showEmailInfo} onClose={() => setShowEmailInfo(false)} />
+
+      <Image source={require('../assets/icon.png')} style={styles.logo} />
       <Text style={styles.title}>Forgot Password?</Text>
       <Text style={styles.subtitle}>
         Select how you would like to receive your verification code.
       </Text>
 
-      {/* Method Selection (Email or SMS) */}
       <View style={styles.methodContainer}>
         <TouchableOpacity
           style={[
@@ -90,13 +116,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
           ]}
           onPress={() => setMethod('email')}
         >
-          <Text
-            style={
-              method === 'email'
-                ? styles.activeMethodText
-                : styles.methodText
-            }
-          >
+          <Text style={method === 'email' ? styles.activeMethodText : styles.methodText}>
             Email
           </Text>
         </TouchableOpacity>
@@ -108,71 +128,59 @@ const ForgotPasswordScreen = ({ navigation }) => {
           ]}
           onPress={() => setMethod('SMS')}
         >
-          <Text
-            style={
-              method === 'SMS' ? styles.activeMethodText : styles.methodText
-            }
-          >
+          <Text style={method === 'SMS' ? styles.activeMethodText : styles.methodText}>
             SMS
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Conditional Input Field (Email or Phone) */}
       {method === 'email' ? (
-        <View style={styles.inputContainer}>
-          <MaterialIcons
-            name="email"
-            size={moderateScale(20)}
-            color="#666"
-            style={styles.icon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-          />
-          <TouchableOpacity
-            style={styles.infoIcon}
-            onPress={() => setShowEmailInfo(true)}
-          >
-            <Text style={styles.infoIconText}>i</Text>
-          </TouchableOpacity>
+        <View style={styles.phoneContainer}>
+          <View style={styles.inputContainer}>
+            <MaterialIcons name="email" size={moderateScale(20)} color="#666" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="email"
+              placeholderTextColor="#666"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+            />
+            <TouchableOpacity style={styles.infoIcon} onPress={() => setShowEmailInfo(true)}>
+              <Text style={styles.infoIconText}>i</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
-        <View style={styles.inputContainer}>
-          <MaterialIcons
-            name="phone"
-            size={moderateScale(20)}
-            color="#666"
-            style={styles.icon}
+        <View style={styles.phoneContainer}>
+          <ModernCountryPicker
+            withFilter
+            withCallingCode
+            withFlag
+            onSelect={handleCountrySelect}
+            countryCode={countryCode}
+            containerButtonStyle={styles.countryPicker}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="phone number"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            maxLength={10}
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.callingCode}>{countryCallingCode}</Text>
+            <TextInput
+              style={[styles.input, { paddingLeft: moderateScale(5) }]}
+              placeholder="phone number"
+              placeholderTextColor="#666" // Ensure consistency
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              maxLength={countryCode === 'AU' ? 9 : 11}
+            />
+          </View>
         </View>
       )}
 
-      {/* Send Code Button */}
       <TouchableOpacity
         style={[
           styles.sendCodeButton,
           {
-            opacity:
-              method === 'email'
-                ? isValidEmail()
-                  ? 1
-                  : 0.5
-                : isValidPhone()
-                ? 1
-                : 0.5,
+            opacity: method === 'email' ? (isValidEmail() ? 1 : 0.5) : (isValidPhone() ? 1 : 0.5),
           },
         ]}
         onPress={handleSendCode}
@@ -232,26 +240,44 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: scale(14),
   },
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '80%',
+    marginBottom: verticalScale(15),
+  },
+  countryPicker: {
+    marginRight: moderateScale(10),
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#e0e0e0',
     borderRadius: moderateScale(20),
-    marginBottom: verticalScale(15),
     paddingHorizontal: moderateScale(10),
-    width: '80%',
+    height: verticalScale(45),
+    flex: 1,
+  },
+  callingCode: {
+    fontSize: scale(14),
+    color: '#666',
+    marginRight: moderateScale(5),
   },
   icon: {
     marginRight: moderateScale(10),
   },
   input: {
     flex: 1,
-    padding: moderateScale(10),
+    height: '100%',
     fontSize: scale(14),
+    color: '#000',
+    padding: 0,
   },
   infoIcon: {
     marginLeft: moderateScale(10),
     padding: moderateScale(5),
+    height: '100%',
+    justifyContent: 'center',
   },
   infoIconText: {
     fontSize: scale(14),
