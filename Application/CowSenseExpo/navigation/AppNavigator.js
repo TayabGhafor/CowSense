@@ -3,7 +3,6 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
-// Import screens with the correct relative path
 import SplashScreen from '../screens/SplashScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
@@ -17,6 +16,11 @@ import ChatScreen from '../screens/ChatScreen';
 import CameraScreen from '../screens/CameraScreen';
 import ProfileDetailsScreen from '../screens/ProfileDetailsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import AIAssistantScreen from '../screens/AIAssistantScreen';
+import LiveMonitoringScreen from '../screens/LiveMonitoringScreen';
+import PatientsScreen from '../screens/PatientsScreen';
+import AppointmentsScreen from '../screens/AppointmentsScreen';
+import NotificationDetailsScreen from '../screens/NotificationDetailsScreen';
 
 const Stack = createStackNavigator();
 
@@ -37,6 +41,11 @@ const AppNavigator = () => {
         <Stack.Screen name="Camera" component={CameraScreen} />
         <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="AIAssistant" component={AIAssistantScreen} />
+        <Stack.Screen name="LiveMonitoring" component={LiveMonitoringScreen} />
+        <Stack.Screen name="Patients" component={PatientsScreen} />
+        <Stack.Screen name="Appointments" component={AppointmentsScreen} />
+        <Stack.Screen name="NotificationDetails" component={NotificationDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
