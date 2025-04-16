@@ -12,7 +12,7 @@ Welcome to **CowSense**! 🚀 This is an **AI-powered livestock disease detectio
 - [🛠️ Usage](#%EF%B8%8F-usage)
 - [🎯 AI Model](#-ai-model)
 - [📜 License](#-license)
-- [👨‍💻 Contributors](#%E2%80%8D-contributors)
+- [👨‍💻 Contributors](#-contributors)
 
 ---
 ## ✨ Features
