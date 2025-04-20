@@ -99,7 +99,7 @@ This project is **open-source** and licensed under the MIT License. 📄
 💡 **CowSense Team**  
 👨‍💻 [Tayab Malik](https://github.com/TayabGhafor)  
 👨‍💻 [Umer](https://github.com/UmarSaeed090)  
-👨‍💻 [Haris](https://github.com/Haris)   
+👨‍💻 [Haris](https://github.com/haris00001)   
 
 🙌 Contributions are welcome! Feel free to **fork** this repository and submit pull requests! 🎉
 
